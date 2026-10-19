@@ -7,7 +7,6 @@ using UnityEngine.UI;
 
 public class MicrophoneSoundFetcher : MonoBehaviour
 {
-    [SerializeField] private TextMeshProUGUI statusText;
     private AudioSource _audioSource;
     private string _activeDevice;
     private float _freq;
@@ -16,20 +15,6 @@ public class MicrophoneSoundFetcher : MonoBehaviour
     {
         _audioSource = GetComponent<AudioSource>();
         StartMicrophone();
-    }
-
-    private void Update()
-    {
-        if (!string.IsNullOrEmpty(_activeDevice) && Microphone.IsRecording(_activeDevice))
-        {
-            statusText.text = $"Device: {_activeDevice} | Is Active | Freq: {_freq}";
-            statusText.color = Color.green;
-        }
-        else
-        {
-            statusText.text = "No Microphone Found";
-            statusText.color = Color.red;
-        }
     }
 
     private void StartMicrophone()

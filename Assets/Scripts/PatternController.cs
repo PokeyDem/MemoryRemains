@@ -9,6 +9,8 @@ public class PatternController : MonoBehaviour
     [SerializeField] private AnimationCurve targetCurve;
     [SerializeField] private LineRenderer targetLine;
     [SerializeField] private LineRenderer playerLine;
+    [SerializeField] private CurveGenerator curveGenerator;
+    [SerializeField] private ScoreManager scoreManager;
 
     [SerializeField] private float cylinderLength = 100f;
 
@@ -18,8 +20,6 @@ public class PatternController : MonoBehaviour
     [SerializeField] private int targetLineResolution = 100;
     [SerializeField] private float recordStep = 0.5f;
     
-    [Header("Temp")]
-    [SerializeField] private TextMeshProUGUI scoreField;
     
     private List<Vector2> _playerRecord = new List<Vector2>();
     private float _lastRecordedX = 0f;
@@ -49,6 +49,12 @@ public class PatternController : MonoBehaviour
             
             targetLine.SetPosition(i, new Vector3(x * targetVisualSize.x, y * targetVisualSize.y, 0f));
         }
+    }
+
+    public void GenerateNewPattern()
+    {
+        targetCurve = curveGenerator.GenerateRandomPattern();
+        GenerateTargetLine();
     }
 
     public void RecordPlayerInput(float currentX, float currentPitch)
@@ -109,7 +115,7 @@ public class PatternController : MonoBehaviour
         
         int displayScore = Mathf.RoundToInt(finalScore);
         
-        scoreField.text = $"Match: {displayScore}%";
+        scoreManager.ShowScore(Math.Round(finalScore, 2));
         Debug.Log($"Final score: {displayScore}");
     }
     
@@ -120,10 +126,30 @@ public class PatternController : MonoBehaviour
         
         _lastRecordedX = 0f;
         _isRecording = true;
-        scoreField.text = "Match:";
     }
     
     public Vector2 GetPlayerVisualSize(){
         return playerVisualSize;
+    }
+    
+    public void UpdateDynamicLineEnd(float normX, float normY)
+    {
+        if (!_isRecording || _playerRecord.Count == 0) return;
+        
+        if (playerLine.positionCount == _playerRecord.Count)
+        {
+            playerLine.positionCount = _playerRecord.Count + 1;
+        }
+
+        float localX = normX * playerVisualSize.x;
+        
+        float localY = normY * playerVisualSize.y; 
+        
+        playerLine.SetPosition(_playerRecord.Count, new Vector3(localX, localY, 0f));
+    }
+
+    public bool IsRecording()
+    {
+        return _isRecording;
     }
 }

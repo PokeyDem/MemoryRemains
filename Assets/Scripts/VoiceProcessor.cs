@@ -9,26 +9,29 @@ public class VoiceProcessor : MonoBehaviour
 {
     [Header("Pitch detection settings")] 
     
-    [SerializeField] private float minFreq = 100f;
-    [SerializeField] private float maxFreq = 800f;
+    [SerializeField] private float minFreq = 80f;
+    [SerializeField] private float maxFreq = 500f;
     [SerializeField] private float noiseThreshold = 0.005f;
     [SerializeField] private float lerpSpeed = 10f;
     
     [SerializeField] private MicrophoneSoundFetcher microphoneSoundFetcher;
     [SerializeField] private UIVisualsController uiVisualsController;
-
-    [Header("Temp")] 
-    [SerializeField] private TextMeshProUGUI minFreqField;
-    [SerializeField] private TextMeshProUGUI maxFreqField;
+    
+    [SerializeField] private bool independentLaunch;
 
     private AudioSource _audioSource;
     private float[] _spectrumData = new float[1024];
     private float _currentTargetValue = 0f;
+    private float _currentRawPitch;
 
     private void Start()
     {
+        if (!independentLaunch)
+        {
+            minFreq = GameManager.Instance.GetMinFreq();
+            maxFreq = GameManager.Instance.GetMaxFreq();
+        }
         _audioSource = GetComponent<AudioSource>();
-        
     }
 
     private void Update()
@@ -67,13 +70,11 @@ public class VoiceProcessor : MonoBehaviour
             }
 
             float pitchValue = freqIndex * (AudioSettings.outputSampleRate / 2f) / _spectrumData.Length;
+            _currentRawPitch = pitchValue;
 
             _currentTargetValue = Mathf.InverseLerp(minFreq, maxFreq, pitchValue);
             
             microphoneSoundFetcher.SetFrequency(_currentTargetValue);
-            uiVisualsController.SetSliderValue(_currentTargetValue);
-            
-            //process UI
         }
     }
 
@@ -82,18 +83,19 @@ public class VoiceProcessor : MonoBehaviour
         return _currentTargetValue;
     }
 
+    public float GetRawPitch()
+    {
+        return _currentRawPitch;
+    }
+
     public void SetMinFreq()
     {
-        Debug.Log(minFreqField.text.Length);
-        int newMinFreq = int.Parse(minFreqField.text.Replace("\u200B", ""));
-        if (newMinFreq > 0)
-            minFreq = newMinFreq;
+        GameManager.Instance.SetMinFreq(_currentRawPitch);
     }
     
     public void SetMaxFreq()
     {
-        int newMaxFreq = int.Parse(maxFreqField.text.Replace("\u200B", ""));
-        if (newMaxFreq > 0)
-            minFreq = newMaxFreq;
+        GameManager.Instance.SetMaxFreq(_currentRawPitch);
     }
+    
 }

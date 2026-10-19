@@ -14,18 +14,16 @@ public class CrankBehaviour : MonoBehaviour
     [SerializeField] private float cylinderLength = 100f;
     [SerializeField] private float spinsToComplete = 3f;
     [SerializeField] private Transform needleTransform;
-    
-    
-    
-    [Header("Microphone smoothing")]
-    [SerializeField] private int movingAverageWindow = 8;
-    [SerializeField] private float deadzone = 0.02f;
-    [SerializeField] private float spikeThreshold = 0.5f;
-    [SerializeField] private float smoothSpeed = 10f;
 
     [SerializeField] private float needleYOffset;
     [SerializeField] private float needleXOffset;
-
+    
+    [SerializeField] private int movingAverageWindow = 3;
+    [SerializeField] private float deadzone = 0.01f;
+    [SerializeField] private float spikeThreshold = 0.4f;
+    [SerializeField] private float smoothSpeed = 25f;
+    
+ 
     private Queue<float> _yBuffer = new Queue<float>();
     private float _lastRawY;
     private float _lastValidY;
@@ -34,9 +32,7 @@ public class CrankBehaviour : MonoBehaviour
     private float _dynamicMultiplier;
     private float _lastAngle;
     private float _currentX;
-    
 
- 
     private void OnMouseDown()
     {
         _dynamicMultiplier = cylinderLength / (spinsToComplete * 360f);
@@ -59,7 +55,6 @@ public class CrankBehaviour : MonoBehaviour
         {
             _currentX += clockwiseStep * _dynamicMultiplier; 
         
-            float currentY = voiceProcessor.GetTargetValue();
             patternController.RecordPlayerInput(_currentX, _smoothedY);
             crankCenter.Rotate(0, 0, -clockwiseStep);
         }
@@ -70,31 +65,37 @@ public class CrankBehaviour : MonoBehaviour
     public void ResetCrank()
     {
         _currentX = 0f;
-        
+        _yBuffer.Clear();
+        _lastRawY = 0f;
+        _lastValidY = 0f;
+        _smoothedY = 0f;
         crankCenter.localRotation = Quaternion.identity;
-        
     }
 
     private void Update()
     {
-        float rawY = voiceProcessor.GetTargetValue();
         
-        if (Mathf.Abs(rawY - _lastRawY) > spikeThreshold)
+        if (!patternController.IsRecording()) return;
+        
+        float realVoiceY = voiceProcessor.GetTargetValue();
+        float processedY = realVoiceY;
+        
+        if (Mathf.Abs(realVoiceY - _lastRawY) > spikeThreshold)
         {
-            rawY = _lastRawY; 
+            processedY = _lastValidY; 
         }
-        _lastRawY = rawY;
+        _lastRawY = realVoiceY; 
         
-        if (Mathf.Abs(rawY - _lastValidY) < deadzone)
+        if (Mathf.Abs(processedY - _lastValidY) < deadzone)
         {
-            rawY = _lastValidY; 
+            processedY = _lastValidY; 
         }
         else
         {
-            _lastValidY = rawY; 
+            _lastValidY = processedY; 
         }
         
-        _yBuffer.Enqueue(rawY);
+        _yBuffer.Enqueue(processedY);
         if (_yBuffer.Count > movingAverageWindow)
         {
             _yBuffer.Dequeue(); 
@@ -106,18 +107,14 @@ public class CrankBehaviour : MonoBehaviour
             averageY += val;
         }
         averageY /= _yBuffer.Count;
- 
+        
         _smoothedY = Mathf.Lerp(_smoothedY, averageY, Time.deltaTime * smoothSpeed);
       
         if (needleTransform != null)
         {
             Vector2 pSize = patternController.GetPlayerVisualSize();
-            
-            float localX = (_currentX - needleXOffset) * pSize.x;
-        
-            float localY = (_smoothedY - needleYOffset) * pSize.y; 
-    
-            needleTransform.localPosition = new Vector3(localX, localY, 0f);
+            needleTransform.localPosition = new Vector3(_currentX * pSize.x, _smoothedY * pSize.y, 0f);
+            patternController.UpdateDynamicLineEnd(_currentX, _smoothedY);
         }
     }
 }
