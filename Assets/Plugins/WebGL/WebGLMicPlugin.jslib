@@ -1,8 +1,13 @@
 mergeInto(LibraryManager.library, {
     
     InitMicrophoneJS: function() {
-      
-        window.micContext = new (window.AudioContext || window.webkitAudioContext)();
+        var AudioCtx = window.AudioContext || window.webkitAudioContext;
+        window.micContext = new AudioCtx();
+        
+        if (window.micContext.state === 'suspended') {
+            window.micContext.resume();
+        }
+
         window.micAnalyser = window.micContext.createAnalyser();
         window.micAnalyser.fftSize = 2048;
         window.micDataArray = new Float32Array(window.micAnalyser.fftSize);
@@ -12,10 +17,10 @@ mergeInto(LibraryManager.library, {
             window.micStream = stream;
             window.micSource = window.micContext.createMediaStreamSource(stream);
             window.micSource.connect(window.micAnalyser);
-            console.log("Microphone access granted!");
+          
         })
         .catch(function(err) {
-            console.error("Microphone access denied: ", err);
+            console.error("Error", err);
         });
     },
 

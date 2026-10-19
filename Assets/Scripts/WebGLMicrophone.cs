@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using System.Runtime.InteropServices;
 
@@ -5,9 +6,9 @@ public class WebGLMicrophone : MonoBehaviour
 {
     [DllImport("__Internal")]
     private static extern void InitMicrophoneJS();
-
+    
     [DllImport("__Internal")]
-    private static extern int GetMicrophoneDataJS(float[] data, int length);
+    private static extern int GetMicrophoneDataJS([In, Out] float[] data, int length);
 
     private float[] _micData = new float[1024];
     public bool isInitialized { get; private set; }
@@ -17,6 +18,26 @@ public class WebGLMicrophone : MonoBehaviour
     private string _deviceName;
     #endif
     
+    public static WebGLMicrophone Instance { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    private void Start()
+    {
+        RequestMicrophone();
+    }
+
     public void RequestMicrophone()
     {
         if (isInitialized) return;
@@ -31,11 +52,7 @@ public class WebGLMicrophone : MonoBehaviour
           
             _micClip = Microphone.Start(_deviceName, true, 1, 44100);
             isInitialized = true;
-            Debug.Log($"Микрофон запущен в редакторе: {_deviceName}");
-        }
-        else
-        {
-            Debug.LogError("В редакторе не найдено ни одного микрофона!");
+            
         }
         #endif
     }

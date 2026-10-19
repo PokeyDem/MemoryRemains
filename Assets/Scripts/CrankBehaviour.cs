@@ -18,10 +18,10 @@ public class CrankBehaviour : MonoBehaviour
     [SerializeField] private float needleYOffset;
     [SerializeField] private float needleXOffset;
     
-    [SerializeField] private int movingAverageWindow = 3;
+    [SerializeField] private int movingAverageWindow = 6;
     [SerializeField] private float deadzone = 0.01f;
     [SerializeField] private float spikeThreshold = 0.4f;
-    [SerializeField] private float smoothSpeed = 25f;
+    [SerializeField] private float smoothSpeed = 15f;
     
  
     private Queue<float> _yBuffer = new Queue<float>();

@@ -305,7 +305,6 @@ GameObject:
   m_Component:
   - component: {fileID: 241768578}
   - component: {fileID: 241768581}
-  - component: {fileID: 241768580}
   - component: {fileID: 241768579}
   m_Layer: 0
   m_Name: AudioController
@@ -344,22 +343,8 @@ MonoBehaviour:
   minFreq: 120
   maxFreq: 190
   noiseThreshold: 0.005
-  lerpSpeed: 10
-  microphoneSoundFetcher: {fileID: 241768580}
   uiVisualsController: {fileID: 0}
   independentLaunch: 0
---- !u!114 &241768580
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 241768577}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c1c599e5aa6e58347ad949c4b23f8b64, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!82 &241768581
 AudioSource:
   m_ObjectHideFlags: 0
@@ -2386,13 +2371,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f76901283987084398c43f7d3c3e6e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  voiceProcessor: {fileID: 241768579}
   activeColor: {r: 0, g: 1, b: 0.08235294, a: 1}
   inactiveColor: {r: 1, g: 0, b: 0, a: 1}
   micDataText: {fileID: 1917354392}
   micIndicator: {fileID: 1351453153}
   threshold: 0.02
-  audioSource: {fileID: 241768581}
 --- !u!1 &1842313669
 GameObject:
   m_ObjectHideFlags: 0

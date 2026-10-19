@@ -606,13 +606,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 145607357}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: 0.24770655, w: -0.9688352}
-  m_LocalPosition: {x: -3.9869742, y: -3.6052418, z: -0.011087716}
+  m_LocalRotation: {x: -0, y: -0, z: 0.21706511, w: 0.9761571}
+  m_LocalPosition: {x: -3.98, y: -3.15, z: -0.011087716}
   m_LocalScale: {x: 0.45990705, y: 0.45990705, z: 0.45990703}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1745946518}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -28.684}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -334.927}
 --- !u!212 &145607359
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -654,7 +654,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 14
-  m_Sprite: {fileID: 21300000, guid: 117a07e5197ed2f46a1bfc1ef41beae2, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 620e76c55b3be4643bc13840b6317ab8, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 0.9254902}
   m_FlipX: 0
   m_FlipY: 0
@@ -5579,6 +5579,50 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!1 &331562959
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 331562960}
+  - component: {fileID: 331562961}
+  m_Layer: 0
+  m_Name: WebGLMic
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &331562960
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 331562959}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 926.76184, y: 598.0276, z: 6.4789968}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &331562961
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 331562959}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67b18b8bf107cf14bbdca90fd4df8379, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &354723888
 GameObject:
   m_ObjectHideFlags: 0
@@ -6638,6 +6682,18 @@ MonoBehaviour:
       - m_Target: {fileID: 89803400}
         m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
         m_MethodName: SwitchToGameplay
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 331562961}
+        m_TargetAssemblyTypeName: WebGLMicrophone, Assembly-CSharp
+        m_MethodName: RequestMicrophone
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -7732,6 +7788,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 331562961}
+        m_TargetAssemblyTypeName: WebGLMicrophone, Assembly-CSharp
+        m_MethodName: RequestMicrophone
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &2042803943
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7927,6 +7995,7 @@ SceneRoots:
   - {fileID: 540870886}
   - {fileID: 1487229352}
   - {fileID: 934596419}
+  - {fileID: 331562960}
   - {fileID: 361273307}
   - {fileID: 89803401}
   - {fileID: 523871530}
