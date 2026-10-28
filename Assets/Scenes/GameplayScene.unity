@@ -2066,7 +2066,7 @@ MonoBehaviour:
   lerpSpeed: 10
   microphoneSoundFetcher: {fileID: 654753498}
   uiVisualsController: {fileID: 39991556}
-  independentLaunch: 1
+  independentLaunch: 0
 --- !u!1 &676932817
 GameObject:
   m_ObjectHideFlags: 0
