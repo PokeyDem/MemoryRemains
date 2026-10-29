@@ -17,7 +17,7 @@ public class CurveGenerator : MonoBehaviour
         
         AnimationCurve generatedCurve = new AnimationCurve();
         
-        int currentYLevel = Random.Range(-currentMaxJump, currentMaxJump); 
+        int currentYLevel = Random.Range(0, currentMaxJump); 
 
         for (int i = 0; i < currentColumns; i++)
         {

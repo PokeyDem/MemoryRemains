@@ -7,7 +7,7 @@ public class MicrophoneIndicatorUI : MonoBehaviour
     [SerializeField] private Color inactiveColor;
     [SerializeField] private TextMeshProUGUI micDataText;
     [SerializeField] private SpriteRenderer micIndicator;
-    [SerializeField] private float threshold = 0.02f;
+    [SerializeField] private float threshold = 0.005f;
 
     private void Start()
     {

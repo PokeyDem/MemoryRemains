@@ -428,7 +428,7 @@ MonoBehaviour:
   creditsSceneName: CreditsScene
   difficultyLevel: 0
   completedLevels: 8
-  calibratedFrequencyCap: 10
+  calibratedFrequencyCap: 6
 --- !u!4 &89803401
 Transform:
   m_ObjectHideFlags: 0

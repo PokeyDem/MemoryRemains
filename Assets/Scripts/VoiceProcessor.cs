@@ -13,10 +13,13 @@ public class VoiceProcessor : MonoBehaviour
     private float _currentTargetValue = 0f;
     private float _currentRawPitch;
     private float _sampleRate = 44100f; 
+    
+    private const float AbsoluteMinVoice = 60f;
+    private const float AbsoluteMaxVoice = 1200f;
 
     private void Start()
     {
-        if (!independentLaunch)
+        if (!independentLaunch && GameManager.Instance != null)
         {
             minFreq = GameManager.Instance.GetMinFreq();
             maxFreq = GameManager.Instance.GetMaxFreq();
@@ -36,39 +39,92 @@ public class VoiceProcessor : MonoBehaviour
         float[] samples = WebGLMicrophone.Instance.GetAudioData();
         if (samples == null || samples.Length == 0) return;
 
-      
         float sum = 0f;
+        float maxAmplitude = 0f;
+        
         for (int i = 0; i < samples.Length; i++)
         {
+            float absVal = Mathf.Abs(samples[i]);
             sum += samples[i] * samples[i];
+            if (absVal > maxAmplitude) maxAmplitude = absVal;
         }
+        
+        Debug.Log($"Max amplitude: {maxAmplitude}");
+        
         float rms = Mathf.Sqrt(sum / samples.Length);
+        
+        Debug.Log($"RMS: {rms}");
+        
+        if (rms < noiseThreshold || maxAmplitude < 0.001f) return;
 
-        if (rms < noiseThreshold) return; 
-
-      
-        int zeroCrossings = 0;
-        bool isPositive = samples[0] > 0;
-        float crossingThreshold = 0.01f;
-
-        for (int i = 1; i < samples.Length; i++)
+        float[] normalizedSamples = new float[samples.Length];
+        for (int i = 0; i < samples.Length; i++)
         {
-            if (isPositive && samples[i] < -crossingThreshold)
-            {
-                zeroCrossings++;
-                isPositive = false;
-            }
-            else if (!isPositive && samples[i] > crossingThreshold)
-            {
-                zeroCrossings++;
-                isPositive = true;
-            }
+            normalizedSamples[i] = samples[i] / maxAmplitude;
         }
         
-        float pitchValue = (zeroCrossings / 2f) * (_sampleRate / samples.Length);
+        int minLag = Mathf.FloorToInt(_sampleRate / AbsoluteMaxVoice);
+        int maxLag = Mathf.CeilToInt(_sampleRate / AbsoluteMinVoice);
         
-        _currentRawPitch = pitchValue;
-        _currentTargetValue = Mathf.InverseLerp(minFreq, maxFreq, pitchValue);
+        if (maxLag >= normalizedSamples.Length) 
+        {
+            maxLag = normalizedSamples.Length - 1;
+        }
+        if (minLag < 1) minLag = 1;
+
+        float[] correlations = new float[maxLag + 1];
+
+        for (int lag = minLag; lag <= maxLag; lag++)
+        {
+            float correlation = 0f;
+            int activeSamples = normalizedSamples.Length - lag;
+            
+            for (int i = 0; i < activeSamples; i++)
+            {
+                correlation += normalizedSamples[i] * normalizedSamples[i + lag];
+            }
+            correlations[lag] = correlation / activeSamples; 
+        }
+
+        int bestLag = -1;
+        float confidenceThreshold = 0.15f; 
+        float fallbackMax = 0f;
+        int fallbackLag = -1;
+
+        for (int lag = minLag + 1; lag < maxLag; lag++)
+        {
+            if (correlations[lag] > fallbackMax)
+            {
+                fallbackMax = correlations[lag];
+                fallbackLag = lag;
+            }
+
+            if (correlations[lag] > correlations[lag - 1] && correlations[lag] > correlations[lag + 1])
+            {
+                if (correlations[lag] > confidenceThreshold)
+                {
+                    bestLag = lag;
+                    break;
+                }
+            }
+        }
+
+        if (bestLag == -1 && fallbackLag != -1)
+        {
+            bestLag = fallbackLag;
+        }
+
+        if (bestLag > 0)
+        {
+            float pitchValue = _sampleRate / bestLag;
+            _currentRawPitch = pitchValue;
+            
+            float logMin = Mathf.Log(minFreq, 2f);
+            float logMax = Mathf.Log(maxFreq, 2f);
+            float logPitch = Mathf.Log(pitchValue, 2f);
+            
+            _currentTargetValue = Mathf.InverseLerp(logMin, logMax, logPitch);
+        }
     }
 
     public float GetTargetValue()
@@ -83,11 +139,13 @@ public class VoiceProcessor : MonoBehaviour
 
     public void SetMinFreq()
     {
-        GameManager.Instance.SetMinFreq(_currentRawPitch);
+        if (GameManager.Instance != null)
+            GameManager.Instance.SetMinFreq(_currentRawPitch);
     }
     
     public void SetMaxFreq()
     {
-        GameManager.Instance.SetMaxFreq(_currentRawPitch);
+        if (GameManager.Instance != null)
+            GameManager.Instance.SetMaxFreq(_currentRawPitch);
     }
 }

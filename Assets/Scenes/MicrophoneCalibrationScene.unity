@@ -2375,7 +2375,7 @@ MonoBehaviour:
   inactiveColor: {r: 1, g: 0, b: 0, a: 1}
   micDataText: {fileID: 1917354392}
   micIndicator: {fileID: 1351453153}
-  threshold: 0.02
+  threshold: 0.002
 --- !u!1 &1842313669
 GameObject:
   m_ObjectHideFlags: 0
