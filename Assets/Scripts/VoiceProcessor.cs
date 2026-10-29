@@ -9,6 +9,20 @@ public class VoiceProcessor : MonoBehaviour
     
     [SerializeField] private UIVisualsController uiVisualsController;
     [SerializeField] private bool independentLaunch;
+    
+    [Header("Delta-Threshold Filter")]
+    [SerializeField] private float maxPitchJumpRatio = 0.2f;
+    [SerializeField] private int maxRejectionFrames = 3;
+    
+    [Header("Dropout Prevention")]
+    [SerializeField] private int maxDropoutFrames = 5;
+    private int _currentDropoutFrames = 0;
+    
+    [Header("Smoothing")]
+    [SerializeField] private float uiSmoothingSpeed = 15f;
+
+    private float _lastValidPitch = 0f;
+    private int _rejectedFrames = 0;
 
     private float _currentTargetValue = 0f;
     private float _currentRawPitch;
@@ -34,7 +48,7 @@ public class VoiceProcessor : MonoBehaviour
         }
     }
 
-    private void AnalyzeSound()
+   private void AnalyzeSound()
     {
         float[] samples = WebGLMicrophone.Instance.GetAudioData();
         if (samples == null || samples.Length == 0) return;
@@ -49,81 +63,123 @@ public class VoiceProcessor : MonoBehaviour
             if (absVal > maxAmplitude) maxAmplitude = absVal;
         }
         
-        Debug.Log($"Max amplitude: {maxAmplitude}");
-        
         float rms = Mathf.Sqrt(sum / samples.Length);
         
-        Debug.Log($"RMS: {rms}");
-        
-        if (rms < noiseThreshold || maxAmplitude < 0.001f) return;
-
-        float[] normalizedSamples = new float[samples.Length];
-        for (int i = 0; i < samples.Length; i++)
-        {
-            normalizedSamples[i] = samples[i] / maxAmplitude;
-        }
-        
-        int minLag = Mathf.FloorToInt(_sampleRate / AbsoluteMaxVoice);
-        int maxLag = Mathf.CeilToInt(_sampleRate / AbsoluteMinVoice);
-        
-        if (maxLag >= normalizedSamples.Length) 
-        {
-            maxLag = normalizedSamples.Length - 1;
-        }
-        if (minLag < 1) minLag = 1;
-
-        float[] correlations = new float[maxLag + 1];
-
-        for (int lag = minLag; lag <= maxLag; lag++)
-        {
-            float correlation = 0f;
-            int activeSamples = normalizedSamples.Length - lag;
-            
-            for (int i = 0; i < activeSamples; i++)
-            {
-                correlation += normalizedSamples[i] * normalizedSamples[i + lag];
-            }
-            correlations[lag] = correlation / activeSamples; 
-        }
-
+        bool hasValidSignal = rms >= noiseThreshold && maxAmplitude >= 0.001f;
         int bestLag = -1;
-        float confidenceThreshold = 0.15f; 
-        float fallbackMax = 0f;
-        int fallbackLag = -1;
 
-        for (int lag = minLag + 1; lag < maxLag; lag++)
+        if (hasValidSignal)
         {
-            if (correlations[lag] > fallbackMax)
+            float[] normalizedSamples = new float[samples.Length];
+            for (int i = 0; i < samples.Length; i++)
             {
-                fallbackMax = correlations[lag];
-                fallbackLag = lag;
+                normalizedSamples[i] = samples[i] / maxAmplitude;
             }
 
-            if (correlations[lag] > correlations[lag - 1] && correlations[lag] > correlations[lag + 1])
+            int minLag = Mathf.FloorToInt(_sampleRate / AbsoluteMaxVoice);
+            int maxLag = Mathf.CeilToInt(_sampleRate / AbsoluteMinVoice);
+            
+            if (maxLag >= normalizedSamples.Length) maxLag = normalizedSamples.Length - 1;
+            if (minLag < 1) minLag = 1;
+
+            float[] correlations = new float[maxLag + 1];
+
+            for (int lag = minLag; lag <= maxLag; lag++)
             {
-                if (correlations[lag] > confidenceThreshold)
+                float correlation = 0f;
+                int activeSamples = normalizedSamples.Length - lag;
+                
+                for (int i = 0; i < activeSamples; i++)
                 {
-                    bestLag = lag;
-                    break;
+                    correlation += normalizedSamples[i] * normalizedSamples[i + lag];
+                }
+                correlations[lag] = correlation / activeSamples; 
+            }
+
+            float confidenceThreshold = 0.08f; 
+            float fallbackMax = 0f;
+            int fallbackLag = -1;
+
+            for (int lag = minLag + 1; lag < maxLag; lag++)
+            {
+                if (correlations[lag] > fallbackMax)
+                {
+                    fallbackMax = correlations[lag];
+                    fallbackLag = lag;
+                }
+
+                if (correlations[lag] > correlations[lag - 1] && correlations[lag] > correlations[lag + 1])
+                {
+                    if (correlations[lag] > confidenceThreshold)
+                    {
+                        bestLag = lag;
+                        break;
+                    }
                 }
             }
+
+            if (bestLag == -1 && fallbackLag != -1)
+            {
+                bestLag = fallbackLag;
+            }
         }
 
-        if (bestLag == -1 && fallbackLag != -1)
-        {
-            bestLag = fallbackLag;
-        }
-
+      
         if (bestLag > 0)
         {
             float pitchValue = _sampleRate / bestLag;
+
+            if (_lastValidPitch > 0f)
+            {
+                float pitchJump = Mathf.Abs(pitchValue - _lastValidPitch) / _lastValidPitch;
+                
+                if (pitchJump > maxPitchJumpRatio && _rejectedFrames < maxRejectionFrames)
+                {
+                    pitchValue = _lastValidPitch; 
+                    _rejectedFrames++;
+                }
+                else
+                {
+                    _lastValidPitch = pitchValue;
+                    _rejectedFrames = 0;
+                }
+            }
+            else
+            {
+                _lastValidPitch = pitchValue;
+                _rejectedFrames = 0;
+            }
+
             _currentRawPitch = pitchValue;
-            
+            _currentDropoutFrames = 0;
+        }
+        else
+        {
+            if (_currentDropoutFrames < maxDropoutFrames && _lastValidPitch > 0f)
+            {
+                _currentRawPitch = _lastValidPitch;
+                _currentDropoutFrames++;
+            }
+            else
+            {
+                _currentRawPitch = 0f;
+                _lastValidPitch = 0f;
+                _rejectedFrames = 0;
+            }
+        }
+        
+        if (_currentRawPitch > 0f)
+        {
             float logMin = Mathf.Log(minFreq, 2f);
             float logMax = Mathf.Log(maxFreq, 2f);
-            float logPitch = Mathf.Log(pitchValue, 2f);
+            float logPitch = Mathf.Log(_currentRawPitch, 2f);
             
-            _currentTargetValue = Mathf.InverseLerp(logMin, logMax, logPitch);
+            float calculatedTarget = Mathf.InverseLerp(logMin, logMax, logPitch);
+            _currentTargetValue = Mathf.Lerp(_currentTargetValue, calculatedTarget, Time.deltaTime * uiSmoothingSpeed);
+        }
+        else
+        {
+            _currentTargetValue = Mathf.Lerp(_currentTargetValue, 0f, Time.deltaTime * uiSmoothingSpeed * 2f);
         }
     }
 

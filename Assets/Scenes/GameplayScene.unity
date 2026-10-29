@@ -2049,9 +2049,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   minFreq: 120
   maxFreq: 190
-  noiseThreshold: 0.005
+  noiseThreshold: 0.004
   uiVisualsController: {fileID: 39991556}
   independentLaunch: 0
+  maxPitchJumpRatio: 0.2
+  maxRejectionFrames: 3
+  maxDropoutFrames: 5
+  uiSmoothingSpeed: 15
 --- !u!1 &676932817
 GameObject:
   m_ObjectHideFlags: 0
@@ -3147,8 +3151,8 @@ MonoBehaviour:
   curveGenerator: {fileID: 929921908}
   scoreManager: {fileID: 1962811570}
   cylinderLength: 3
-  targetVisualSize: {x: 1.9, y: 2}
-  playerVisualSize: {x: 1.9, y: 2}
+  targetVisualSize: {x: 1.9, y: 1.8}
+  playerVisualSize: {x: 1.9, y: 1.8}
   targetLineResolution: 100
   recordStep: 0.01
   shapeWeight: 0.6
@@ -9949,7 +9953,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2051702634
 RectTransform:
   m_ObjectHideFlags: 0
